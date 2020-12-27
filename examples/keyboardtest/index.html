@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			body {
+				background-color: black;
+				color: white;
+				font-family: Courier New, monospace;
+			}
+			
+			#mainCanvas {
+				background-color: white;
+			}
+	
+			#termCanvas {
+				background-color: #333;
+			}
+		</style>
+		<title>KeyboardTest - pl32.js test</title>
+	</head>
+	<body onload="loop()">
+		<h1>KeyboardTest</h1>
+		<p>GitHub link: <a href="https://github.com/pocketlinux32/pl-framework">https://github.com/pocketlinux32/pl-framework</a></p>
+		<canvas id="mainCanvas" width=640px height=480px>Get rid of IE, already, old man! It's been unsupported for years!</canvas>
+		<canvas id="termCanvas" width=480px height=480px>Seriously, get something newer than IE.</canvas>
+		<script src="../../src/pl32-system.js" type="text/javascript"></script>
+		<script>
+			plSystem.init(document.getElementById("mainCanvas"), document.getElementById("termCanvas"));
+
+			function main(){
+				plSystem.systemMain.print("KeyboardTest v2, (g) PocketNES Software 2020", 128, 25, "Sans-Serif", "20px");
+				plSystem.systemMain.print("Pressed key: " + plSystem.keyboard[0], 128, 50, "Sans-Serif", "20px");
+			}
+
+			function loop(){
+				plSystem.systemMain.clearScreen();
+				main();
+				if(plSystem.keyboard[2] != -1){
+					plSystem.systemTerm.print("loop", "Key pressed is " + plSystem.keyboard[0] + " (ASCII: " + plSystem.keyboard[1] + ")");
+					plSystem.keyboard[2] = -1;
+				}
+				window.requestAnimationFrame(loop);
+			}
+		</script>
+	</body>
+</html>

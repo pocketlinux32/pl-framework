@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+		</style>
+		<title>Testcase[0] - pl32.js test</title>
+	</head>
+	<body onload="loop()">
+		<h1>Testcase[0]</h1>
+		<p>GitHub link: <a href="https://github.com/pocketlinux32/pl-framework">https://github.com/pocketlinux32/pl-framework</a></p>
+		<canvas id=mainCanvas width=640px height=480px>Get rid of IE, already, old man! It's been unsupported for years!</canvas>
+		<canvas id=termCanvas width=480px height=480px>Seriously, get something newer than IE.</canvas>
+		<script src="../../src/pl32-system.js" type="text/javascript"></script>
+		<script src="../../src/pl32-graphics.js" type="text/javascript"></script>
+		<script src="../../src/pl32-object.js" type="text/javascript"></script>
+		<script>
+			plSystem.init(document.getElementById("mainCanvas"), document.getElementById("termCanvas"));
+			var textCoords = [ 250, 60 ];
+			var prgmCounter = 0;
+			var timeVar = undefined;
+			var scoreBoard = [ 0, 0 ];
+			plSystem.systemTerm.print("[global]", "Program counter set to zero.");
+
+			var paddle1 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), paddle2 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), ball = new plObject.itemSystem([ "ball.png", 20, 20 ]), ballStuck = false, ballX = 0, ballChecker;
+
+			paddle1.objectObj.move(10, 180);
+			paddle2.objectObj.move(590, 180);
+			ball.objectObj.move(300, 220);
+			ball.objectObj.speed = [ 3, 2 ];
+
+			function AILogic(side){
+				switch(side){
+					case 0:
+						if(ball.objectObj.coords[0] <= 300 && ball.objectObj.speed[0] < 0){
+							if(ball.objectObj.coords[1] >= paddle1.objectObj.coords[1] + (paddle1.textureObj.dimensions[1] - ball.textureObj.dimensions[1])){
+								paddle1.objectObj.speed[1] = 2;
+							}else if(ball.objectObj.coords[1] <= paddle1.objectObj.coords[1]){
+								paddle1.objectObj.speed[1] = -2;
+							}else{
+								paddle1.objectObj.speed[1] = 0;
+							}
+							paddle1.objectObj.moveRel();
+						}
+						break;
+					case 1:
+						if(ball.objectObj.coords[0] >= 300 && ball.objectObj.speed[0] > 0){
+							if(ball.objectObj.coords[1] >= paddle2.objectObj.coords[1] + (paddle2.textureObj.dimensions[1] - ball.textureObj.dimensions[1])){
+								paddle2.objectObj.speed[1] = 2;
+							}else if(ball.objectObj.coords[1] <= paddle2.objectObj.coords[1]){
+								paddle2.objectObj.speed[1] = -2;
+							}else{
+								paddle2.objectObj.speed[1] = 0;
+							}
+							paddle2.objectObj.moveRel();
+						}
+						break;
+				}
+			}
+
+			function keyboardLogic(side){
+				if(plSystem.keyboard[2] != -1){
+					switch(side){
+						case 0:
+							switch(plSystem.keyboard[1]){
+								case 38:
+									paddle1.objectObj.speed[1] = -10;
+									break;
+								case 40:
+									paddle1.objectObj.speed[1] = 10;
+									break;
+								default:
+									paddle1.objectObj.speed[1] = 0;
+							}
+							paddle1.objectObj.moveRel();
+							break;
+						case 1:
+							switch(plSystem.keyboard[1]){
+								case 38:
+									paddle2.objectObj.speed[1] = -10;
+									break;
+								case 40:
+									paddle2.objectObj.speed[1] = 10;
+									break;
+								default:
+									paddle2.objectObj.speed[1] = 0;
+							}
+							paddle2.objectObj.moveRel();
+					}
+				}
+			}
+
+			function randomInt(min = 0, max = 10){
+				return Math.floor(Math.random() * (max - min) + min);
+			}
+
+			plSystem.systemTerm.print("[global]", "AI logic and Keyboard logic loaded into memory");
+
+			function main(){
+				if(prgmCounter == 1){
+					plSystem.systemMain.print(scoreBoard[0], textCoords[0], textCoords[1], "Sans-Serif", "20px");
+					plSystem.systemMain.print(scoreBoard[1], textCoords[0] + 520, textCoords[1], "Sans-Serif", "20px");
+					keyboardLogic(0);
+					AILogic(1);
+				}else{
+					plSystem.systemMain.print("Testcase[0]: Pong", textCoords[0], textCoords[1], "Sans-Serif", "20px");
+					plSystem.systemMain.print("(c)2020 PocketNES Software, Under GPLv3", textCoords[0] - 100, textCoords[1] + 25, "Sans-Serif", "20px");
+					plSystem.systemMain.print("Press Enter to start a game", textCoords[0] - 40, textCoords[1] + 330, "Sans-Serif", "20px");
+					AILogic(0);
+					AILogic(1);
+					if(plSystem.keyboard[0] = "Enter" && plSystem.keyboard[2] != -1){
+						prgmCounter += 1;
+						scoreBoard = [ 0, 0 ];
+						textCoords[0] = 60;
+						ball.objectObj.move(300, 220);
+						ball.objectObj.speed = [ -randomInt(3, 6), -randomInt(2, 6) ];
+						plSystem.systemTerm.print("main", "Program counter increased to 1");
+					}
+				}
+
+				plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 1);
+				plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 1);
+				ball.objectObj.moveRel();
+
+				if(ball.objectObj.coords[1] >= 460 || ball.objectObj.coords[1] <= 0){
+					ball.objectObj.speed[1] = -ball.objectObj.speed[1];
+				}
+
+				if(ball.objectObj.coords[0] >= 600){
+					scoreBoard[0] += 1;
+					ball.objectObj.move(300, 220);
+					ball.objectObj.speed = [ randomInt(4, 7), randomInt(2, 6) ];
+				}else if(ball.objectObj.coords[0] <= 0){
+					scoreBoard[1] += 1;
+					ball.objectObj.move(300, 220);
+					ball.objectObj.speed = [ -randomInt(4, 7), -randomInt(2, 6) ];
+				}
+
+				paddle1.draw();
+				paddle2.draw();
+				ball.draw();
+			}
+
+			function loop(){
+				plSystem.systemMain.clearScreen();
+				main();
+				if(plSystem.keyboard[2] != -1){
+					plSystem.keyboard[2] = -1;
+				}
+				window.requestAnimationFrame(loop);
+			}
+		</script>
+	</body>
+</html>
