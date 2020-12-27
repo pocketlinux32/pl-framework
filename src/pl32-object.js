@@ -8,7 +8,7 @@ var plObject = {
 	checkOverlap : function(obj1, obj2, obj1Dims, obj2Dims){
 		var obj1x = obj1.coords[0], obj2x = obj2.coords[0], obj1y = obj1.coords[1], obj2y = obj2.coords[1];
 
-		if((obj1x + obj1Dims[0] >= obj2x) && (obj1y + obj1Dims[1] >= obj2y) && (obj1x <= obj2x + obj2Dims[0]) && (obj1y <= obj2y + obj2Dims[1])){
+		if((obj1x + obj1Dims[0] >= obj2x) && (obj1x <= obj2x + obj2Dims[0]) && (obj1y <= obj2y + obj2Dims[1]) && (obj1y + obj1Dims[1] >= obj2y)){
 			return true;
 		}
 		return false;

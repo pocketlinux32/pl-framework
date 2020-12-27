@@ -1,8 +1,20 @@
-
 <!DOCTYPE html>
 <html>
 	<head>
 		<style>
+			body {
+				background-color: black;
+				color: white;
+				font-family: Courier New, monospace;
+			}
+
+			#mainCanvas {
+				background-color: white;
+			}
+
+			#termCanvas {
+				background-color: #333;
+			}
 		</style>
 		<title>Testcase[0] - pl32.js test</title>
 	</head>
@@ -20,6 +32,7 @@
 			var prgmCounter = 0;
 			var timeVar = undefined;
 			var scoreBoard = [ 0, 0 ];
+			var result = [ false, false ];
 			plSystem.systemTerm.print("[global]", "Program counter set to zero.");
 
 			var paddle1 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), paddle2 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), ball = new plObject.itemSystem([ "ball.png", 20, 20 ]), ballStuck = false, ballX = 0, ballChecker;
@@ -27,31 +40,50 @@
 			paddle1.objectObj.move(10, 180);
 			paddle2.objectObj.move(590, 180);
 			ball.objectObj.move(300, 220);
-			ball.objectObj.speed = [ 3, 2 ];
+			ball.objectObj.speed = [ 5, 4 ];
+
+			function paddleMvnt(paddle, direction, speed){
+				switch(direction){
+					case 0:
+						if(paddle.objectObj.coords[1] > 0){
+							paddle.objectObj.speed[1] = -speed;
+						}else{
+							paddle.objectObj.speed[1] = -speed;
+						}
+						break;
+					case 1:
+						if(paddle.objectObj.coords[1] < 420){
+							paddle.objectObj.speed[1] = speed;
+						}else{
+							paddle.objectObj.speed[1] = speed;
+						}
+						break;
+					default:
+						paddle.objectObj.speed[1] = 0;
+				}
+			}
+
+			function baseAILogic(object){
+				if(ball.objectObj.coords[1] >= object.objectObj.coords[1] + (object.textureObj.dimensions[1] - ball.textureObj.dimensions[1])){
+					paddleMvnt(object, 1, 4);
+				}else if(ball.objectObj.coords[1] <= object.objectObj.coords[1]){
+					paddleMvnt(object, 0, 4);
+				}else{
+					paddleMvnt(object, -1, 0);
+				}
+			}
 
 			function AILogic(side){
 				switch(side){
 					case 0:
 						if(ball.objectObj.coords[0] <= 300 && ball.objectObj.speed[0] < 0){
-							if(ball.objectObj.coords[1] >= paddle1.objectObj.coords[1] + (paddle1.textureObj.dimensions[1] - ball.textureObj.dimensions[1])){
-								paddle1.objectObj.speed[1] = 2;
-							}else if(ball.objectObj.coords[1] <= paddle1.objectObj.coords[1]){
-								paddle1.objectObj.speed[1] = -2;
-							}else{
-								paddle1.objectObj.speed[1] = 0;
-							}
+							baseAILogic(paddle1);
 							paddle1.objectObj.moveRel();
 						}
 						break;
 					case 1:
 						if(ball.objectObj.coords[0] >= 300 && ball.objectObj.speed[0] > 0){
-							if(ball.objectObj.coords[1] >= paddle2.objectObj.coords[1] + (paddle2.textureObj.dimensions[1] - ball.textureObj.dimensions[1])){
-								paddle2.objectObj.speed[1] = 2;
-							}else if(ball.objectObj.coords[1] <= paddle2.objectObj.coords[1]){
-								paddle2.objectObj.speed[1] = -2;
-							}else{
-								paddle2.objectObj.speed[1] = 0;
-							}
+							baseAILogic(paddle2);
 							paddle2.objectObj.moveRel();
 						}
 						break;
@@ -64,26 +96,26 @@
 						case 0:
 							switch(plSystem.keyboard[1]){
 								case 38:
-									paddle1.objectObj.speed[1] = -10;
+									paddleMvnt(paddle1, 0, 6);
 									break;
 								case 40:
-									paddle1.objectObj.speed[1] = 10;
+									paddleMvnt(paddle1, 1, 6);
 									break;
 								default:
-									paddle1.objectObj.speed[1] = 0;
+									paddleMvnt(paddle1, -1, 0);
 							}
 							paddle1.objectObj.moveRel();
 							break;
 						case 1:
 							switch(plSystem.keyboard[1]){
 								case 38:
-									paddle2.objectObj.speed[1] = -10;
+									paddleMvnt(paddle2, 0, -6);
 									break;
 								case 40:
-									paddle2.objectObj.speed[1] = 10;
+									paddleMvnt(paddle2, 1, 6);
 									break;
 								default:
-									paddle2.objectObj.speed[1] = 0;
+									paddleMvnt(paddle2, -1, 0);
 							}
 							paddle2.objectObj.moveRel();
 					}
@@ -102,49 +134,65 @@
 					plSystem.systemMain.print(scoreBoard[1], textCoords[0] + 520, textCoords[1], "Sans-Serif", "20px");
 					keyboardLogic(0);
 					AILogic(1);
+					if(plSystem.keyboard[0] == "Enter" && plSystem.keyboard[2] != -1){
+						prgmCounter++;
+						plSystem.systemTerm.print("main", "Program counter increased to 1");
+						plsystem.keyboard[2] = 5;
+					}
+				}else if(prgmCounter == 2){
+					plSystem.systemMain.print("")
 				}else{
 					plSystem.systemMain.print("Testcase[0]: Pong", textCoords[0], textCoords[1], "Sans-Serif", "20px");
 					plSystem.systemMain.print("(c)2020 PocketNES Software, Under GPLv3", textCoords[0] - 100, textCoords[1] + 25, "Sans-Serif", "20px");
 					plSystem.systemMain.print("Press Enter to start a game", textCoords[0] - 40, textCoords[1] + 330, "Sans-Serif", "20px");
 					AILogic(0);
 					AILogic(1);
-					if(plSystem.keyboard[0] = "Enter" && plSystem.keyboard[2] != -1){
-						prgmCounter += 1;
+					if(plSystem.keyboard[0] == "Enter" && plSystem.keyboard[2] != -1){
+						prgmCounter++;
 						scoreBoard = [ 0, 0 ];
 						textCoords[0] = 60;
 						ball.objectObj.move(300, 220);
 						ball.objectObj.speed = [ -randomInt(3, 6), -randomInt(2, 6) ];
 						plSystem.systemTerm.print("main", "Program counter increased to 1");
+						plSystem.keyboard[2] = 5;
 					}
 				}
+				
+				if(prgmCounter < 2){
+					if(ball.objectObj.coords[0] < 20 || ball.objectObj.coords[0] > 580){
+					        plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 2);
+						plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 1);
+					}else{ 
+						plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 1);
+						plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 1);
+					}
+					ball.objectObj.moveRel();
 
-				plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 1);
-				plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 1);
-				ball.objectObj.moveRel();
+					if(ball.objectObj.coords[1] >= 460 || ball.objectObj.coords[1] <= 0){
+						ball.objectObj.speed[1] = -ball.objectObj.speed[1];
+					}
 
-				if(ball.objectObj.coords[1] >= 460 || ball.objectObj.coords[1] <= 0){
-					ball.objectObj.speed[1] = -ball.objectObj.speed[1];
+					if(ball.objectObj.coords[0] >= 600){
+						scoreBoard[0] += 1;
+						ball.objectObj.move(300, 220);
+						ball.objectObj.speed = [ randomInt(5, 7), randomInt(2, 6) ];
+					}else if(ball.objectObj.coords[0] <= 0){
+						scoreBoard[1] += 1;
+						ball.objectObj.move(300, 220);
+						ball.objectObj.speed = [ -randomInt(5, 7), -randomInt(2, 6) ];
+					}
+					paddle1.draw();
+					paddle2.draw();
+					ball.draw();
 				}
-
-				if(ball.objectObj.coords[0] >= 600){
-					scoreBoard[0] += 1;
-					ball.objectObj.move(300, 220);
-					ball.objectObj.speed = [ randomInt(4, 7), randomInt(2, 6) ];
-				}else if(ball.objectObj.coords[0] <= 0){
-					scoreBoard[1] += 1;
-					ball.objectObj.move(300, 220);
-					ball.objectObj.speed = [ -randomInt(4, 7), -randomInt(2, 6) ];
-				}
-
-				paddle1.draw();
-				paddle2.draw();
-				ball.draw();
 			}
 
 			function loop(){
 				plSystem.systemMain.clearScreen();
 				main();
-				if(plSystem.keyboard[2] != -1){
+				if(plSystem.keyboard[2] > -1 && plSystem.keyboard[2] < 4){
+					plSystem.keyboard[2]++;
+				}else{
 					plSystem.keyboard[2] = -1;
 				}
 				window.requestAnimationFrame(loop);
