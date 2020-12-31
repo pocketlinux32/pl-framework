@@ -32,10 +32,11 @@
 			var prgmCounter = 0;
 			var timeVar = undefined;
 			var scoreBoard = [ 0, 0 ];
+			var runGame = false;
 			var result = [ false, false ];
 			plSystem.systemTerm.print("[global]", "Program counter set to zero.");
 
-			var paddle1 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), paddle2 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), ball = new plObject.itemSystem([ "ball.png", 20, 20 ]), ballStuck = false, ballX = 0, ballChecker;
+			var paddle1 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), paddle2 = new plObject.itemSystem([ "paddle.png", 20, 60 ]), ball = new plObject.itemSystem([ "ball.png", 20, 20 ]);
 
 			paddle1.objectObj.move(10, 180);
 			paddle2.objectObj.move(590, 180);
@@ -45,21 +46,34 @@
 			function paddleMvnt(paddle, direction, speed){
 				switch(direction){
 					case 0:
-						if(paddle.objectObj.coords[1] > 0){
-							paddle.objectObj.speed[1] = -speed;
+						if(paddle.objectObj.coords[1] < 0){
+							paddle.objectObj.speed[1] = 0;
 						}else{
 							paddle.objectObj.speed[1] = -speed;
 						}
 						break;
 					case 1:
-						if(paddle.objectObj.coords[1] < 420){
-							paddle.objectObj.speed[1] = speed;
+						if(paddle.objectObj.coords[1] > 420){
+							paddle.objectObj.speed[1] = 0;
 						}else{
 							paddle.objectObj.speed[1] = speed;
 						}
 						break;
 					default:
 						paddle.objectObj.speed[1] = 0;
+				}
+			}
+
+			function baseKeyboardLogic(object){
+				switch(plSystem.keyboard[1]){
+					case 38:
+						paddleMvnt(object, 0, 6);
+						break;
+					case 40:
+						paddleMvnt(object, 1, 6);
+						break;
+					default:
+						paddleMvnt(object, -1, 0);
 				}
 			}
 
@@ -94,29 +108,11 @@
 				if(plSystem.keyboard[2] != -1){
 					switch(side){
 						case 0:
-							switch(plSystem.keyboard[1]){
-								case 38:
-									paddleMvnt(paddle1, 0, 6);
-									break;
-								case 40:
-									paddleMvnt(paddle1, 1, 6);
-									break;
-								default:
-									paddleMvnt(paddle1, -1, 0);
-							}
+							baseKeyboardLogic(paddle1);
 							paddle1.objectObj.moveRel();
 							break;
 						case 1:
-							switch(plSystem.keyboard[1]){
-								case 38:
-									paddleMvnt(paddle2, 0, -6);
-									break;
-								case 40:
-									paddleMvnt(paddle2, 1, 6);
-									break;
-								default:
-									paddleMvnt(paddle2, -1, 0);
-							}
+							baseKeyboardLogic(paddle2);
 							paddle2.objectObj.moveRel();
 					}
 				}
@@ -135,15 +131,26 @@
 					keyboardLogic(0);
 					AILogic(1);
 					if(plSystem.keyboard[0] == "Enter" && plSystem.keyboard[2] != -1){
-						prgmCounter++;
-						plSystem.systemTerm.print("main", "Program counter increased to 1");
-						plsystem.keyboard[2] = 5;
+						if(runGame){
+							prgmCounter++;
+							plSystem.systemTerm.print("main", "Program counter increased to 1");
+							plSystem.keyboard[2] = -1;
+						}else{
+							runGame = true;
+							ball.objectObj.speed = [ randomInt(5, 7), randomInt() ];
+							plSystem.keyboard[2] = -1;
+						}
 					}
 				}else if(prgmCounter == 2){
-					plSystem.systemMain.print("")
+					plSystem.systemMain.print("Pause", 300, 220, "Sans-Serif", "20px");
+					if(plSystem.keyboard[0] == "Enter" && plSystem.keyboard[2] != -1){
+						prgmCounter--;
+						plSystem.systemTerm.print("main", "Program counter increased to 1");
+						plSystem.keyboard[2] = -1;
+					}
 				}else{
 					plSystem.systemMain.print("Testcase[0]: Pong", textCoords[0], textCoords[1], "Sans-Serif", "20px");
-					plSystem.systemMain.print("(c)2020 PocketNES Software, Under GPLv3", textCoords[0] - 100, textCoords[1] + 25, "Sans-Serif", "20px");
+					plSystem.systemMain.print("(c) 2020 PocketNES Software, Under LGPLv2.1", textCoords[0] - 150, textCoords[1] + 25, "Sans-Serif", "20px");
 					plSystem.systemMain.print("Press Enter to start a game", textCoords[0] - 40, textCoords[1] + 330, "Sans-Serif", "20px");
 					AILogic(0);
 					AILogic(1);
@@ -152,19 +159,25 @@
 						scoreBoard = [ 0, 0 ];
 						textCoords[0] = 60;
 						ball.objectObj.move(300, 220);
-						ball.objectObj.speed = [ -randomInt(3, 6), -randomInt(2, 6) ];
+						ball.objectObj.speed = [ 0, 0 ];
 						plSystem.systemTerm.print("main", "Program counter increased to 1");
-						plSystem.keyboard[2] = 5;
+						plSystem.keyboard[2] = -1;
 					}
 				}
-				
+
 				if(prgmCounter < 2){
-					if(ball.objectObj.coords[0] < 20 || ball.objectObj.coords[0] > 580){
-					        plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 2);
-						plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 1);
-					}else{ 
-						plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 1);
-						plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 1);
+					if(ball.objectObj.coords[0] < 290){
+						if(ball.objectObj.coords[0] < 20){
+							plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 2);
+						}else{
+							plObject.bounce(ball.objectObj, paddle1.objectObj, ball.textureObj.dimensions, paddle1.textureObj.dimensions, 1);
+						}
+					}else if(ball.objectObj.coords[0] > 310){
+						if(ball.objectObj.coords[0] > 580){
+							plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 2);
+						}else{
+							plObject.bounce(ball.objectObj, paddle2.objectObj, ball.textureObj.dimensions, paddle2.textureObj.dimensions, 1);
+						}
 					}
 					ball.objectObj.moveRel();
 
@@ -172,15 +185,17 @@
 						ball.objectObj.speed[1] = -ball.objectObj.speed[1];
 					}
 
-					if(ball.objectObj.coords[0] >= 600){
-						scoreBoard[0] += 1;
+					if(ball.objectObj.coords[0] >= 600 || ball.objectObj.coords[0] <= 0){
+						if(ball.objectObj.coords[0] >= 600){
+							scoreBoard[0] += 1;
+						}else{
+							scoreBoard[1] += 1;
+						}
 						ball.objectObj.move(300, 220);
-						ball.objectObj.speed = [ randomInt(5, 7), randomInt(2, 6) ];
-					}else if(ball.objectObj.coords[0] <= 0){
-						scoreBoard[1] += 1;
-						ball.objectObj.move(300, 220);
-						ball.objectObj.speed = [ -randomInt(5, 7), -randomInt(2, 6) ];
+						ball.objectObj.speed = [0, 0];
+						runGame = false;
 					}
+					
 					paddle1.draw();
 					paddle2.draw();
 					ball.draw();
